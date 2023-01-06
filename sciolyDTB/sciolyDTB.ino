@@ -1,6 +1,3 @@
-// need cmath for if the sensor changes logarithmicaly
-#include <cmath>
-
 //oled libs
 #include <SPI.h>
 #include <Wire.h>
@@ -34,10 +31,10 @@ void IRAM_ATTR NewDataReadyISR() {
 // set up to work like this, where y = grams and x = sensor input
 // y = a(b(x+c))+d
 // y = a*log_b(x+c)+d  (forgot if this is how log parent function is)
-constexpr float CAL_A = 1;
-constexpr float CAL_B = 1;
-constexpr float CAL_C = 1;
-constexpr float CAL_D = 1;
+constexpr float CAL_A = 1.5;
+constexpr float CAL_B = 1.5;
+constexpr float CAL_C = 1.5;
+constexpr float CAL_D = 1.5;
 
 // PINS
 // sensor pad in
@@ -54,7 +51,7 @@ void setup () {
   pinMode(bluePin,OUTPUT);
 
  
-  Serial.begin(9600);
+  Serial.begin(115200);
   //display setup
  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -107,7 +104,8 @@ void loop () {
   display.setCursor(0,0);             // Start at top-left corner
   //***change the mv if you change the gain***
   display.println("mv: "+(results * 3));
-  display.println("grams: "+grams(results));
+  display.println("grams: ");
+  display.println(grams(results));
   display.display();
 }
 
@@ -129,7 +127,7 @@ void blueOut(){
   digitalWrite(bluePin,HIGH);
 }
 
-double grams(int16_t mv){
+double grams(const int16_t& mv){
   //put the real function here
   return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D;
   //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D;
