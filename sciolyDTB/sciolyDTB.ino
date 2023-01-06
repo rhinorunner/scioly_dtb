@@ -92,13 +92,8 @@ void loop () {
   int16_t results = ads.getLastConversionResults();
 
   // whats this?
+	//idk its in the example code tho
   Serial.print("Differential: "); Serial.print(results); Serial.print("("); Serial.print(ads.computeVolts(results)); Serial.println("mV)");
-
-  // LINEAR
-  double grams = CAL_A * ( CAL_B * ( results + CAL_C ) ) + CAL_D;
-  // LOGARITHMIC
-  // assert that results and CAL_B are both > 1
-  //double grams = CAL_A * (log(results) / log(CAL_B) + CAL_C) + CAL_D;
   
   new_data = false;
 
@@ -112,11 +107,12 @@ void loop () {
   display.setCursor(0,0);             // Start at top-left corner
   //***change the mv if you change the gain***
   display.println("mv: "+(results * 3));
-  display.println("grams: "+weight(results));
+  display.println("grams: "+grams(results));
   display.display();
 }
 
-double weight(int16_t mv){
+double grams(int16_t mv){
   //put the real function here
-  return int16_t*4
+  return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D;
+  //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D;
 }
