@@ -111,6 +111,24 @@ void loop () {
   display.display();
 }
 
+void redOut(){
+  digitalWrite(redPin,HIGH);
+  digitalWrite(greenPin,LOW);
+  digitalWrite(bluePin,LOW);
+}
+
+void greenOut(){
+  digitalWrite(redPin,LOW);
+  digitalWrite(greenPin,HIGH);
+  digitalWrite(bluePin,LOW);
+}
+
+void blueOut(){
+  digitalWrite(redPin,LOW);
+  digitalWrite(greenPin,LOW);
+  digitalWrite(bluePin,HIGH);
+}
+
 double grams(int16_t mv){
   //put the real function here
   return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D;
