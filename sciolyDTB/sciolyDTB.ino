@@ -16,8 +16,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 Adafruit_ADS1015 ads;
 
-constexpr uint8_t READY_PIN = 3;
-
 #ifndef IRAM_ATTR
 #define IRAM_ATTR
 #endif
@@ -31,14 +29,20 @@ void IRAM_ATTR NewDataReadyISR() {
 // set up to work like this, where y = grams and x = sensor input
 // y = a(b(x+c))+d
 // y = a*log_b(x+c)+d  (forgot if this is how log parent function is)
-constexpr float CAL_A = 1.5;
-constexpr float CAL_B = 1.5;
-constexpr float CAL_C = 1.5;
-constexpr float CAL_D = 1.5;
+constexpr float CAL_A    = 1.5;
+constexpr float CAL_B    = 1.5;
+constexpr float CAL_C    = 1.5;
+constexpr float CAL_D    = 1.5;
+static    float CAL_ZERO = 0;
 
 // PINS
 // sensor pad in
-constexpr uint8_t PIN_PADIN = A0;
+constexpr uint8_t PAD_PIN = A0;
+// adc pin
+constexpr uint8_t READY_PIN = 7;
+// zero button pin
+constexpr uint8_t ZERO_PIN = 6;
+
 
 //led pins
 constexpr uint8_t greenPin = 13;
@@ -85,6 +89,13 @@ void loop () {
 	if (!new_data) {
     return;
   }
+
+  // replace (0) with the button press detection
+  if (0) {
+    double grams = grams(results * 3);
+    CAL_ZERO = grams;
+  }
+  
   // does this not return float?
   int16_t results = ads.getLastConversionResults();
 
@@ -129,6 +140,6 @@ void blueOut(){
 
 double grams(const int16_t& mv){
   //put the real function here
-  return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D;
-  //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D;
+  return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D - CAL_ZERO;
+  //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D - CAL_ZERO;
 }
