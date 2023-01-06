@@ -103,6 +103,13 @@ void loop () {
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
   display.setCursor(0,0);             // Start at top-left corner
-  display.println(F("Hello, world!"));
+  //***change the mv if you change the gain***
+  display.println("mv: "+(results * 3));
+  display.println("grams: "+weight(results));
   display.display();
+}
+
+double weight(int16_t mv){
+  //put the real function here
+  return int16_t*4
 }
