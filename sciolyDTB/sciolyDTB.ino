@@ -2,7 +2,7 @@
 #include <cmath>
 
 // CALIBRATION
-// set up to work like this
+// set up to work like this, where y = grams and x = sensor input
 // y = a(b(x+c))+d
 // y = a*log_b(x+c)+d  (forgot if this is how log parent function is)
 const static float CAL_A = 1;
