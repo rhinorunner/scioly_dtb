@@ -8,32 +8,18 @@
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS 0x3D ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-//12 bit libs
-#include <Adafruit_ADS1X15.h>
-
-Adafruit_ADS1015 ads;
-
-#ifndef IRAM_ATTR
-#define IRAM_ATTR
-#endif
-
-volatile bool new_data = false;
-void IRAM_ATTR NewDataReadyISR() {
-  new_data = true;
-}
 
 // CALIBRATION
 // set up to work like this, where y = grams and x = sensor input
 // y = a(b(x+c))+d
 // y = a*log_b(x+c)+d  (forgot if this is how log parent function is)
-constexpr float CAL_A    = 1.5;
-constexpr float CAL_B    = 1.5;
-constexpr float CAL_C    = 1.5;
-constexpr float CAL_D    = 1.5;
-static    float CAL_ZERO = 0;
+constexpr float  CAL_A    = 1.5;
+constexpr float  CAL_B    = 1.5;
+constexpr float  CAL_C    = 1.5;
+constexpr float  CAL_D    = 1.5;
+static    double CAL_ZERO = 0;
 
 // PINS
 // sensor pad in
@@ -45,80 +31,12 @@ constexpr uint8_t ZERO_PIN = 6;
 
 
 //led pins
-constexpr uint8_t greenPin = 13;
-constexpr uint8_t redPin = 12;
-constexpr uint8_t bluePin = 11;
+constexpr uint8_t greenPin = 4;
+constexpr uint8_t redPin = 3;
+constexpr uint8_t bluePin = 2;
 
-void setup () {
-  pinMode(greenPin,OUTPUT);
-  pinMode(redPin,OUTPUT);
-  pinMode(bluePin,OUTPUT);
-
- 
-  Serial.begin(115200);
-  //display setup
- if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;); // Don't proceed, loop forever
-  }
-
-  // Show initial display buffer contents on the screen --
-  // the library initializes this with an Adafruit splash screen.
-  display.display();
-  delay(2000); // Pause for 2 seconds
-
-  // Clear the buffer
-  display.clearDisplay();
-  
-  //ads starter
-  if (!ads.begin()) {
-    Serial.println("Failed to initialize ADS.");
-    while (1);
-  }
-
-  pinMode(READY_PIN, INPUT);
-  // We get a falling edge every time a new sample is ready.
-  attachInterrupt(digitalPinToInterrupt(READY_PIN), NewDataReadyISR, FALLING);
-
-  // Start continuous conversions.
-  ads.startADCReading(ADS1X15_REG_CONFIG_MUX_DIFF_0_1, /*continuous=*/true);
- 
-}
-
-void loop () {
-	if (!new_data) {
-    return;
-  }
-
-  // replace (0) with the button press detection
-  if (0) {
-    double grams = grams(results * 3);
-    CAL_ZERO = grams;
-  }
-  
-  // does this not return float?
-  int16_t results = ads.getLastConversionResults();
-
-  // whats this?
-	//idk its in the example code tho
-  Serial.print("Differential: "); Serial.print(results); Serial.print("("); Serial.print(ads.computeVolts(results)); Serial.println("mV)");
-  
-  new_data = false;
-
-  // In a real application we probably don't want to do a delay here if we are doing interrupt-based sampling, but we have a delay
-  // in this example to avoid writing too much data to the serial port.
-  delay(1000);
-
-  display.clearDisplay();
-  display.setTextSize(1);             // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(0,0);             // Start at top-left corner
-  //***change the mv if you change the gain***
-  display.println("mv: "+(results * 3));
-  display.println("grams: ");
-  display.println(grams(results));
-  display.display();
-}
+#define analogPin A5
+uint8_t analogVal = 0;
 
 void redOut(){
   digitalWrite(redPin,HIGH);
@@ -142,4 +60,55 @@ double grams(const int16_t& mv){
   //put the real function here
   return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D - CAL_ZERO;
   //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D - CAL_ZERO;
+}
+
+void setup () {
+  pinMode(greenPin,OUTPUT);
+  pinMode(redPin,OUTPUT);
+  pinMode(bluePin,OUTPUT);
+  pinMode(analogPin,INPUT);
+
+ 
+  Serial.begin(115200);
+  //display setup
+ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+
+  // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  display.display();
+  delay(1000); // Pause for 2 seconds
+
+  // Clear the buffer
+  display.clearDisplay();
+  display.drawPixel(10, 10, SSD1306_WHITE);
+
+  // Show the display buffer on the screen. You MUST call display() after
+  // drawing commands to make them visible on screen!
+  display.display();
+  delay(1000);
+  
+  //ads starter
+}
+
+void loop () {
+  analogVal = analogRead(analogPin);
+  
+  display.clearDisplay();
+  display.setTextSize(1);             // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  display.setCursor(0,0);             // Start at top-left corner
+  //***change the mv if you change the gain***
+  display.println("mv: ");
+  display.println(mathsfun(analogVal));
+  Serial.println(analogVal);
+  display.println("grams: ");
+  display.println(grams(analogVal));
+  display.display();
+}
+
+double mathsfun(const uint16_t& red){
+  return (((10000*5)/(red*4.88)));
 }
