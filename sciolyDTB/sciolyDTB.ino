@@ -97,8 +97,8 @@ void loop () {
   // LINEAR
   double grams = CAL_A * ( CAL_B * ( results + CAL_C ) ) + CAL_D;
   // LOGARITHMIC
-  // idk if "log" is the log function from cmath.h
-  //double grams = CAL_A * ( log( results ) / log( CAL_B ) ) + CAL_D;
+  // assert that results and CAL_B are both > 1
+  //double grams = CAL_A * (log(results) / log(CAL_B) + CAL_C) + CAL_D;
   
   new_data = false;
 
