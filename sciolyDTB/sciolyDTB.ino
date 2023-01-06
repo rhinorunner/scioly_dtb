@@ -19,7 +19,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 Adafruit_ADS1015 ads;
 
-constexpr int READY_PIN = 3;
+constexpr uint8_t READY_PIN = 3;
 
 #ifndef IRAM_ATTR
 #define IRAM_ATTR
@@ -54,7 +54,7 @@ void setup () {
   pinMode(bluePin,OUTPUT);
 
  
-	Serial.begin(9600);
+  Serial.begin(9600);
   //display setup
  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
