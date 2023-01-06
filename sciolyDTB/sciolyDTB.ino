@@ -19,7 +19,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 Adafruit_ADS1015 ads;
 
-constexpr int READY_PIN = 3;
+constexpr uint8_t READY_PIN = 3;
 
 #ifndef IRAM_ATTR
 #define IRAM_ATTR
@@ -34,19 +34,19 @@ void IRAM_ATTR NewDataReadyISR() {
 // set up to work like this, where y = grams and x = sensor input
 // y = a(b(x+c))+d
 // y = a*log_b(x+c)+d  (forgot if this is how log parent function is)
-const static float CAL_A = 1;
-const static float CAL_B = 1;
-const static float CAL_C = 1;
-const static float CAL_D = 1;
+constexpr float CAL_A = 1;
+constexpr float CAL_B = 1;
+constexpr float CAL_C = 1;
+constexpr float CAL_D = 1;
 
 // PINS
 // sensor pad in
-unsigned short PIN_PADIN = A0;
+constexpr uint8_t PIN_PADIN = A0;
 
 //led pins
-int greenPin = 13;
-int redPin = 12;
-int bluePin = 11;
+constexpr uint8_t greenPin = 13;
+constexpr uint8_t redPin = 12;
+constexpr uint8_t bluePin = 11;
 
 void setup () {
   pinMode(greenPin,OUTPUT);
@@ -54,7 +54,7 @@ void setup () {
   pinMode(bluePin,OUTPUT);
 
  
-	Serial.begin(9600);
+  Serial.begin(9600);
   //display setup
  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -88,11 +88,18 @@ void loop () {
 	if (!new_data) {
     return;
   }
-
+  // does this not return float?
   int16_t results = ads.getLastConversionResults();
 
+  // whats this?
   Serial.print("Differential: "); Serial.print(results); Serial.print("("); Serial.print(ads.computeVolts(results)); Serial.println("mV)");
 
+  // LINEAR
+  double grams = CAL_A * ( CAL_B * ( results + CAL_C ) ) + CAL_D;
+  // LOGARITHMIC
+  // assert that results and CAL_B are both > 1
+  //double grams = CAL_A * (log(results) / log(CAL_B) + CAL_C) + CAL_D;
+  
   new_data = false;
 
   // In a real application we probably don't want to do a delay here if we are doing interrupt-based sampling, but we have a delay
