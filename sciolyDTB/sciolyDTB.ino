@@ -4,6 +4,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+// PINS
+#define sensorPin A5
+
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
@@ -15,11 +18,11 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // set up to work like this, where y = grams and x = sensor input
 // y = a(b(x+c))+d
 // y = a*log_b(x+c)+d  (forgot if this is how log parent function is)
-constexpr float  CAL_A    = 1.5;
-constexpr float  CAL_B    = 1.5;
-constexpr float  CAL_C    = 1.5;
+constexpr float  CAL_A    = 1.5 ;
+constexpr float  CAL_B    = 1.5 ;
+constexpr float  CAL_C    = 1.5 ;
 constexpr float  CAL_D    = -263;
-static    double CAL_ZERO = 0;
+static    double CAL_ZERO = 0   ;
 
 // PINS
 // sensor pad in
@@ -34,10 +37,9 @@ constexpr uint8_t greenPin = 4;
 constexpr uint8_t redPin = 3;
 constexpr uint8_t bluePin = 2;
 
-#define analogPin A5
-constexpr uint8_t avg_size = 10;
-constexpr float R_0 = 10000.0; // known resistor value in [Ohms]
-constexpr float Vcc = 5.0; // supply voltage
+constexpr uint8_t ITERATIONS = 10;
+constexpr uint16_t R_0 = 10000; // known resistor value in [Ohms]
+constexpr float   VCC = 5.0; // supply voltage
 
 void setLed(const char color[5]) 
 {
@@ -67,6 +69,10 @@ double grams(const int16_t& mv){
   //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D - CAL_ZERO;
 }
 
+double mathsfun(const uint16_t& red){
+  return (((10000 * -5) / (red * 4.88)) - 27);
+}
+
 void setup () {
   pinMode(greenPin,OUTPUT);
   pinMode(redPin,OUTPUT);
@@ -74,7 +80,7 @@ void setup () {
   pinMode(analogPin,INPUT);
 
  
-  Serial.begin(115200);
+  Serial.begin(9600);
   //display setup
  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -100,13 +106,13 @@ void setup () {
 void loop () {
   float sum_val = 0.0;
   float R_FSR;
-  for(int i = 0; i<avg_size; i++){
-    sum_val+=(analogRead(analogPin)/1023.0)*5;
-    delay(11);
+  for(uint16_t i = 0; i < ITERATIONS; i++){
+    sum_val += (analogRead(sensorPin) / 1023) * 5;
+    delay(10);
   }
-  sum_val/=avg_size;
+  sum_val /= avg_size;
 
-  R_FSR=(R_0/1000.0)*((Vcc/sum_val)-1.0);
+  R_FSR = (R_0 / 1000) * ((VCC / sum_val) - 1);
 
   
   display.clearDisplay();
@@ -120,8 +126,4 @@ void loop () {
   display.println("grams: ");
   display.println(grams(R_FSR));
   display.display();
-}
-
-double mathsfun(const uint16_t& red){
-  return (((10000*-5)/(red*4.88))-27);
 }
