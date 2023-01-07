@@ -36,7 +36,9 @@ constexpr uint8_t redPin = 3;
 constexpr uint8_t bluePin = 2;
 
 #define analogPin A5
-uint8_t analogVal = 0;
+int avg_size = 10;
+float R_0 = 10000.0; // known resistor value in [Ohms]
+float Vcc = 5.0; // supply voltage
 
 void redOut(){
   digitalWrite(redPin,HIGH);
@@ -89,12 +91,19 @@ void setup () {
   // drawing commands to make them visible on screen!
   display.display();
   delay(1000);
-  
-  //ads starter
+
 }
 
 void loop () {
-  analogVal = analogRead(analogPin);
+  float sum_val = 0.0;
+  float R_FSR;
+  for(int i = 0; i<avg_size; i++){
+    sum_val+=(analogRead(analogPin)/1023.0)*5;
+    delay(11);
+  }
+  sum_val/=avg_size;
+
+  R_FSR=(R_0/1000.0)*((Vcc/sum_val)-1.0);
   
   display.clearDisplay();
   display.setTextSize(1);             // Normal 1:1 pixel scale
@@ -105,7 +114,7 @@ void loop () {
   display.println(mathsfun(analogVal));
   Serial.println(analogVal);
   display.println("grams: ");
-  display.println(grams(analogVal));
+  display.println(grams(R_FSR));
   display.display();
 }
 
