@@ -18,7 +18,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 constexpr float  CAL_A    = 1.5;
 constexpr float  CAL_B    = 1.5;
 constexpr float  CAL_C    = 1.5;
-constexpr float  CAL_D    = 1.5;
+constexpr float  CAL_D    = -263;
 static    double CAL_ZERO = 0;
 
 // PINS
@@ -28,7 +28,6 @@ constexpr uint8_t PAD_PIN = A0;
 constexpr uint8_t READY_PIN = 7;
 // zero button pin
 constexpr uint8_t ZERO_PIN = 6;
-
 
 //led pins
 constexpr uint8_t greenPin = 4;
@@ -108,6 +107,7 @@ void loop () {
   sum_val/=avg_size;
 
   R_FSR=(R_0/1000.0)*((Vcc/sum_val)-1.0);
+
   
   display.clearDisplay();
   display.setTextSize(1);             // Normal 1:1 pixel scale
@@ -123,5 +123,5 @@ void loop () {
 }
 
 double mathsfun(const uint16_t& red){
-  return (((10000*5)/(red*4.88)));
+  return (((10000*-5)/(red*4.88))-27);
 }
