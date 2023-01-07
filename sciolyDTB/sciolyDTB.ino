@@ -122,5 +122,5 @@ void loop () {
 }
 
 double mathsfun(const uint16_t& red){
-  return (((10000*-5)/(red*4.88))+27);
+  return (((10000*-5)/(red*4.88))-27);
 }
