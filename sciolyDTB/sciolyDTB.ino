@@ -38,22 +38,25 @@ constexpr uint8_t bluePin = 2;
 #define analogPin A5
 uint8_t analogVal = 0;
 
-void redOut(){
-  digitalWrite(redPin,HIGH);
-  digitalWrite(greenPin,LOW);
-  digitalWrite(bluePin,LOW);
-}
-
-void greenOut(){
-  digitalWrite(redPin,LOW);
-  digitalWrite(greenPin,HIGH);
-  digitalWrite(bluePin,LOW);
-}
-
-void blueOut(){
-  digitalWrite(redPin,LOW);
-  digitalWrite(greenPin,LOW);
-  digitalWrite(bluePin,HIGH);
+void setLed(const char color[5]) {
+  if (color == "red") {
+    digitalWrite(redPin   , HIGH);
+    digitalWrite(greenPin , LOW );
+    digitalWrite(bluePin  , LOW );
+    return;
+  }
+  if (color == "green") {
+    digitalWrite(redPin   , LOW );
+    digitalWrite(greenPin , HIGH);
+    digitalWrite(bluePin  , LOW );
+    return;
+  }
+  if (color == "blue") {
+    digitalWrite(redPin   , LOW );
+    digitalWrite(greenPin , LOW );
+    digitalWrite(bluePin  , HIGH);
+    return;
+  }
 }
 
 double grams(const int16_t& mv){
