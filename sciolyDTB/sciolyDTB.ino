@@ -59,6 +59,12 @@ void setLed(const char color[5]) {
   }
 }
 
+void greenOut(){
+  digitalWrite(greenPin,HIGHT);
+  digitalWrite(redPin,LOW);
+  digitalWrite(bluePin,LOW);
+}
+
 double grams(const int16_t& mv){
   //put the real function here
   return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D - CAL_ZERO;
@@ -97,6 +103,9 @@ void setup () {
 }
 
 void loop () {
+  
+  greenOut();
+  
   analogVal = analogRead(analogPin);
   
   display.clearDisplay();
