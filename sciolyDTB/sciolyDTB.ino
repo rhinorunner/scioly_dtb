@@ -29,16 +29,16 @@ constexpr uint8_t READY_PIN = 7;
 // zero button pin
 constexpr uint8_t ZERO_PIN = 6;
 
-
 //led pins
 constexpr uint8_t greenPin = 4;
 constexpr uint8_t redPin = 3;
 constexpr uint8_t bluePin = 2;
 
 #define analogPin A5
-uint8_t analogVal = 0;
+uint32_t analogVal = 0;
 
-void setLed(const char color[5]) {
+void setLed(const char color[5]) 
+{
   if (color == "red") {
     digitalWrite(redPin   , HIGH);
     digitalWrite(greenPin , LOW );
@@ -57,12 +57,6 @@ void setLed(const char color[5]) {
     digitalWrite(bluePin  , HIGH);
     return;
   }
-}
-
-void greenOut(){
-  digitalWrite(greenPin,HIGHT);
-  digitalWrite(redPin,LOW);
-  digitalWrite(bluePin,LOW);
 }
 
 double grams(const int16_t& mv){
@@ -104,8 +98,6 @@ void setup () {
 
 void loop () {
   
-  rangeLeds("red",200,"blue",500."green");
-  
   greenOut();
   
   analogVal = analogRead(analogPin);
@@ -125,16 +117,4 @@ void loop () {
 
 double mathsfun(const uint16_t& red){
   return (((10000*-5)/(red*4.88))-27);
-}
-
-void rangeLeds(string color1, int changePoint, string color2, int changePoint2, string color3){
-  if(grams(analogVal) < changPoint){
-    setLed(color1);
-  }
-  else if(grams(analogVal)>changePoint && grams(analogVal)<changePoint2){
-    setLed(color2);
-  }
-  else{
-    setLed(color3);
-  }
 }
