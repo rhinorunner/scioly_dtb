@@ -104,6 +104,8 @@ void setup () {
 
 void loop () {
   
+  rangeLeds("red",200,"blue",500."green");
+  
   greenOut();
   
   analogVal = analogRead(analogPin);
@@ -123,4 +125,16 @@ void loop () {
 
 double mathsfun(const uint16_t& red){
   return (((10000*-5)/(red*4.88))-27);
+}
+
+void rangeLeds(string color1, int changePoint, string color2, int changePoint2, string color3){
+  if(grams(analogVal) < changPoint){
+    setLed(color1);
+  }
+  else if(grams(analogVal)>changePoint && grams(analogVal)<changePoint2){
+    setLed(color2);
+  }
+  else{
+    setLed(color3);
+  }
 }
