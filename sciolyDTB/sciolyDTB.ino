@@ -18,7 +18,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 constexpr float  CAL_A    = 1.5;
 constexpr float  CAL_B    = 1.5;
 constexpr float  CAL_C    = 1.5;
-constexpr float  CAL_D    = 1.5;
+constexpr float  CAL_D    = -263;
 static    double CAL_ZERO = 0;
 
 // PINS
@@ -122,5 +122,5 @@ void loop () {
 }
 
 double mathsfun(const uint16_t& red){
-  return (((10000*5)/(red*4.88)));
+  return (((10000*-5)/(red*4.88))+27);
 }
