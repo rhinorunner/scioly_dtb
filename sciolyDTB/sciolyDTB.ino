@@ -108,7 +108,7 @@ void loop () {
   display.setCursor(0,0);             // Start at top-left corner
   //***change the mv if you change the gain***
   display.println("mv: ");
-  display.println(mathsfun(analogVal)*4.88);
+  display.println(mathsfun(analogVal));
   Serial.println(analogVal);
   display.println("grams: ");
   display.println(grams(analogVal));
