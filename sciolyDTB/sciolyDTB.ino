@@ -36,9 +36,9 @@ constexpr uint8_t redPin = 3;
 constexpr uint8_t bluePin = 2;
 
 #define analogPin A5
-int avg_size = 10;
-float R_0 = 10000.0; // known resistor value in [Ohms]
-float Vcc = 5.0; // supply voltage
+constexpr uint8_t avg_size = 10;
+constexpr float R_0 = 10000.0; // known resistor value in [Ohms]
+constexpr float Vcc = 5.0; // supply voltage
 
 void redOut(){
   digitalWrite(redPin,HIGH);
