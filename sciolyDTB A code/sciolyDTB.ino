@@ -77,7 +77,7 @@ void setup () {
   pinMode(greenPin,OUTPUT);
   pinMode(redPin,OUTPUT);
   pinMode(bluePin,OUTPUT);
-  pinMode(analogPin,INPUT);
+  //pinMode(analogPin,INPUT);
 
  
   Serial.begin(9600);
@@ -110,7 +110,7 @@ void loop () {
     sum_val += (analogRead(sensorPin) / 1023) * 5;
     delay(10);
   }
-  sum_val /= avg_size;
+  sum_val /= ITERATIONS;
 
   R_FSR = (R_0 / 1000) * ((VCC / sum_val) - 1);
 
@@ -121,8 +121,8 @@ void loop () {
   display.setCursor(0,0);             // Start at top-left corner
   //***change the mv if you change the gain***
   display.println("mv: ");
-  display.println(mathsfun(analogVal));
-  Serial.println(analogVal);
+  display.println(mathsfun(R_FSR));
+  Serial.println(R_FSR);
   display.println("grams: ");
   display.println(grams(R_FSR));
   display.display();
