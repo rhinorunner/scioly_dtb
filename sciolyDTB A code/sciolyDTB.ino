@@ -63,14 +63,15 @@ void setLed(const char color[5])
   }
 }
 
-double grams(const int16_t& mv){
+double grams(const double& mv){
   //put the real function here
   return CAL_A * ( CAL_B * ( mv + CAL_C ) ) + CAL_D - CAL_ZERO;
   //return CAL_A * (log(mv) / log(CAL_B) + CAL_C) + CAL_D - CAL_ZERO;
 }
 
-double mathsfun(const uint16_t& red){
-  return (((10000 * -5) / (red * 4.88)) - 27);
+double mathsfun(const double& red){
+    return       ((-50000 / (red * 4.88)) - 27);
+  //return (((10000 * -5) / (red * 4.88)) - 27);
 }
 
 void setup () {
@@ -104,8 +105,8 @@ void setup () {
 }
 
 void loop () {
-  float sum_val = 0.0;
-  float R_FSR;
+  double sum_val = 0.0;
+  double R_FSR;
   for(uint16_t i = 0; i < ITERATIONS; i++){
     sum_val += (analogRead(sensorPin) / 1023) * 5;
     delay(10);
