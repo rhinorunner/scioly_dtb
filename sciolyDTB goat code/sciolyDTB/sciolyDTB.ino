@@ -40,8 +40,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  reading = analogRead(analogPin);
-  Serial.println(reading);
+  //reading = analogRead(analogPin);
+  smoothRead = smoothing(analogRead(analogPin));
+  Serial.println(smoothRead);
   delay(10);
   display.clearDisplay();
 
@@ -51,11 +52,11 @@ void loop() {
   display.print("mv ");
   display.println(reading*4.88);
   display.print("gs ");
-  display.print(convertNumber(reading));
+  display.print(convertNumber(smoothRead));
   display.display();
 }
 
-double convertNumber(double data){
+double convertNumber(int data){
   return data*2;
 }
 
@@ -96,4 +97,22 @@ void colorChoice(char color){
   }else if(color == "b"){
     blueLed();
   }
+}
+
+int smoothing(int rawData){
+  int numberOfData = 10;
+  int avgVals[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int sum = 0;
+  int avg = 0;
+  for(int i=numberOfData; i > 1; i --){
+    avgVals[i]=avgVals[i-1];
+  }
+  avgVals[0]=rawData;
+  
+  for(int i = 0; i < numberOfData; i ++){
+    sum = sum + avgVals[i];
+  }
+  avg = sum/numberOfData;
+  delay(1);
+  return avg;
 }
