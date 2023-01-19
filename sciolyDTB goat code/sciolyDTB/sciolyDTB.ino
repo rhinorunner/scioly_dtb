@@ -14,6 +14,10 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define analogPin A3
 int reading = 0;
 
+#define redPin 3
+#define greenPin 4
+#define bluePin 5
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(A0,INPUT);
@@ -51,6 +55,45 @@ void loop() {
   display.display();
 }
 
-int convertNumber(double data){
+double convertNumber(double data){
   return data*2;
+}
+
+void redLed(){
+  digitalWrite(redPin, HIGH);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, LOW);
+}
+
+void greenLed() {
+  digitalWrite(redPin, LOW);
+  digitalWrite(greenPin, HIGH);
+  digitalWrite(bluePin, LOW);
+}
+
+void blueLed() {
+  digitalWrite(redPin, LOW);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, HIGH);
+}
+
+void rangeLol(int bound1, char c1, int bound2, char c2, int bound3, char c3, int bound4){
+  double weight = convertNumber(reading);
+  if(bound1 < weight && weight < bound2){
+    colorChoice(c1);
+  }else if(bound2 < weight && weight < bound3){
+    colorChoice(c2);
+  }else if(bound3 < weight && weight < bound4){
+    colorChoice(c3);
+  }
+}
+
+void colorChoice(char color){
+  if(color == "r"){
+    redLed();
+  }else if(color == "g"){
+    greenLed();
+  }else if(color == "b"){
+    blueLed();
+  }
 }
