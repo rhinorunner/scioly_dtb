@@ -51,7 +51,7 @@ void loop() {
   display.setCursor(0,0);
   display.print("mv ");
   display.println(reading*4.88);
-  display.print("gs ");
+  display.print("Gs ");
   display.print(convertNumber(smoothRead));
   display.display();
 }
