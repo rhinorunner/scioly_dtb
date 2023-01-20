@@ -11,12 +11,17 @@
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+#include <Adafruit_ADS1X15.h>
+Adafruit_ADS1015 ads;
+
 #define analogPin A3
 int reading = 0;
 
 #define redPin 3
 #define greenPin 4
 #define bluePin 5
+
+int avgVals[] = {0, 0, 0, 0, 0};
 
 void setup() {
   // put your setup code here, to run once:
@@ -27,7 +32,6 @@ void setup() {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
-
   display.display();
   delay(500);
 
@@ -36,13 +40,20 @@ void setup() {
   display.drawPixel(10, 10, SSD1306_WHITE);
 
   display.display();
+
+  if (!ads.begin()) {
+    Serial.println("Failed to initialize ADS.");
+    while (1);
+  }
+
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //reading = analogRead(analogPin);
-  smoothRead = smoothing(analogRead(analogPin));
+  reading = ads.readADC_SingleEnded(0);
+  int smoothRead = smoothing(reading);
   Serial.println(smoothRead);
+  
   delay(10);
   display.clearDisplay();
 
@@ -50,7 +61,7 @@ void loop() {
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
   display.print("mv ");
-  display.println(reading*4.88);
+  display.println(ads.computeVolts(smoothRead));
   display.print("Gs ");
   display.print(convertNumber(smoothRead));
   display.display();
@@ -100,11 +111,10 @@ void colorChoice(char color){
 }
 
 int smoothing(int rawData){
-  int numberOfData = 10;
-  int avgVals[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int numberOfData = 5;
   int sum = 0;
   int avg = 0;
-  for(int i=numberOfData; i > 1; i --){
+  for(int i=numberOfData-1; i > 0; i --){
     avgVals[i]=avgVals[i-1];
   }
   avgVals[0]=rawData;
@@ -113,6 +123,5 @@ int smoothing(int rawData){
     sum = sum + avgVals[i];
   }
   avg = sum/numberOfData;
-  delay(1);
   return avg;
 }
