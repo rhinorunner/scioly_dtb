@@ -1,31 +1,26 @@
-
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
-#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+//OLED Setup info
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
+//ADC setup
 #include <Adafruit_ADS1X15.h>
 Adafruit_ADS1015 ads;
 
-#define analogPin A3
-int reading = 0;
+//Setting up ints to store values
+int smoothRead = 0;
+int avgVals[] = {0, 0, 0, 0, 0};
 
 #define redPin 3
 #define greenPin 4
 #define bluePin 5
 
-int avgVals[] = {0, 0, 0, 0, 0};
-
 void setup() {
   // put your setup code here, to run once:
-  pinMode(A0,INPUT);
   Serial.begin(9600);
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -34,24 +29,20 @@ void setup() {
   }
   display.display();
   delay(500);
-
   display.clearDisplay();
-
   display.drawPixel(10, 10, SSD1306_WHITE);
-
   display.display();
 
   if (!ads.begin()) {
     Serial.println("Failed to initialize ADS.");
     while (1);
   }
-
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  reading = ads.readADC_SingleEnded(0);
-  int smoothRead = smoothing(reading);
+  //read the ADC and then 
+  smoothRead = smoothing(ads.readADC_SingleEnded(0));
   Serial.println(smoothRead);
   
   delay(10);
@@ -67,15 +58,19 @@ void loop() {
   display.display();
 }
 
+
+//gonna add a legit funcion at some point
 double convertNumber(int data){
   return data*2;
 }
 
+//turns on the led of a certain color and turns the rest off
 void redLed(){
   digitalWrite(redPin, HIGH);
   digitalWrite(greenPin, LOW);
   digitalWrite(bluePin, LOW);
 }
+
 
 void greenLed() {
   digitalWrite(redPin, LOW);
@@ -89,6 +84,7 @@ void blueLed() {
   digitalWrite(bluePin, HIGH);
 }
 
+//set the ranges for the leds to turn off and on
 void rangeLol(int bound1, char c1, int bound2, char c2, int bound3, char c3, int bound4){
   double weight = convertNumber(reading);
   if(bound1 < weight && weight < bound2){
@@ -100,6 +96,7 @@ void rangeLol(int bound1, char c1, int bound2, char c2, int bound3, char c3, int
   }
 }
 
+//parse the color choosen
 void colorChoice(char color){
   if(color == "r"){
     redLed();
@@ -110,6 +107,7 @@ void colorChoice(char color){
   }
 }
 
+//find the avg of the last 5 data points
 int smoothing(int rawData){
   int numberOfData = 5;
   int sum = 0;
