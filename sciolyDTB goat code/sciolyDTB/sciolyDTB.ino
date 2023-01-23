@@ -19,8 +19,12 @@ int avgVals[] = {0, 0, 0, 0, 0};
 #define greenPin 4
 #define bluePin 5
 
+#define buttonPin 7
+int tare = 0;
+
 void setup() {
   // put your setup code here, to run once:
+  pinMode(buttonPin,INPUT);
   Serial.begin(9600);
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -43,24 +47,30 @@ void loop() {
   // put your main code here, to run repeatedly:
   //read the ADC and then 
   smoothRead = smoothing(ads.readADC_SingleEnded(0));
-  Serial.println(smoothRead);
-  
+  Serial.println(smoothRead-tare);
+  //small delay so the mesurments are diffrent
   delay(10);
-  display.clearDisplay();
 
+  //an easy way to zero out the scale
+  if(digitalRead(buttonPin) == LOW){
+    tare = smoothRead;
+  }
+  
+  //mostly boilerplate code to clear the display and then write text to the display
+  display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
   display.print("mv ");
-  display.println(ads.computeVolts(smoothRead));
+  display.println(ads.computeVolts(smoothRead-tare));
   display.print("Gs ");
-  display.print(convertNumber(smoothRead));
+  display.print(convertNumber(smoothRead-tare));
   display.display();
 }
 
-
 //gonna add a legit funcion at some point
 double convertNumber(int data){
+  //amazing conversion being done
   return data*2;
 }
 
@@ -70,7 +80,6 @@ void redLed(){
   digitalWrite(greenPin, LOW);
   digitalWrite(bluePin, LOW);
 }
-
 
 void greenLed() {
   digitalWrite(redPin, LOW);
@@ -86,7 +95,7 @@ void blueLed() {
 
 //set the ranges for the leds to turn off and on
 void rangeLol(int bound1, char c1, int bound2, char c2, int bound3, char c3, int bound4){
-  double weight = convertNumber(reading);
+  double weight = convertNumber(smoothRead-tare);
   if(bound1 < weight && weight < bound2){
     colorChoice(c1);
   }else if(bound2 < weight && weight < bound3){
@@ -108,6 +117,7 @@ void colorChoice(char color){
 }
 
 //find the avg of the last 5 data points
+//I love this int!
 int smoothing(int rawData){
   int numberOfData = 5;
   int sum = 0;
