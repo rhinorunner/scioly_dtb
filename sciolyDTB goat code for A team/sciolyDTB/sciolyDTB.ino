@@ -62,9 +62,9 @@ void loop() {
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
   display.print("mv ");
-  display.println(ads.computeVolts(smoothRead-tare));
+  display.println(ads.computeVolts(smoothRead));//display the reading from the adc without any changes
   display.print("Gs ");
-  display.print(convertNumber(smoothRead-tare));
+  display.print(convertNumber(smoothRead-tare));//find the weight but subtract what has been zeroed out
   display.display();
 }
 
