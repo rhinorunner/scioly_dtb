@@ -20,7 +20,7 @@ int avgVals[] = {0, 0, 0, 0, 0};
 #define bluePin 5
 
 #define buttonPin 7
-int tare = 0;
+double tare = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -47,13 +47,13 @@ void loop() {
   // put your main code here, to run repeatedly:
   //read the ADC and then 
   smoothRead = smoothing(ads.readADC_SingleEnded(0));
-  Serial.println(smoothRead-tare);
+  Serial.println(smoothRead);
   //small delay so the mesurments are diffrent
   delay(10);
 
   //an easy way to zero out the scale
-  if(digitalRead(buttonPin) == LOW){
-    tare = smoothRead;
+  if(digitalRead(buttonPin) == HIGH){
+    tare = convertNumber(smoothRead);
   }
   
   //mostly boilerplate code to clear the display and then write text to the display
@@ -64,7 +64,7 @@ void loop() {
   display.print("mv ");
   display.println(ads.computeVolts(smoothRead));//display the reading from the adc without any changes
   display.print("Gs ");
-  display.print(convertNumber(smoothRead-tare));//find the weight but subtract what has been zeroed out
+  display.print(convertNumber(smoothRead)-tare);//find the weight but subtract what has been zeroed out
   display.display();
 }
 
@@ -95,7 +95,7 @@ void blueLed() {
 
 //set the ranges for the leds to turn off and on
 void rangeLol(int bound1, char c1, int bound2, char c2, int bound3, char c3, int bound4){
-  double weight = convertNumber(smoothRead-tare);
+  double weight = convertNumber(smoothRead)-tare;
   if(bound1 < weight && weight < bound2){
     colorChoice(c1);
   }else if(bound2 < weight && weight < bound3){
