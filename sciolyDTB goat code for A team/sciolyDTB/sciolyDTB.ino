@@ -15,9 +15,9 @@ Adafruit_ADS1015 ads;
 int smoothRead = 0;
 int avgVals[] = {0, 0, 0, 0, 0};
 
-#define redPin 3
-#define greenPin 4
-#define bluePin 5
+#define redPin 4
+#define greenPin 3
+#define bluePin 2
 
 #define buttonPin 7
 double tare = 0;
