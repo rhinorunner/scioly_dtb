@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <math.h>
 
 //OLED Setup info
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
@@ -22,6 +23,8 @@ int avgVals[] = {0, 0, 0, 0, 0};
 #define buttonPin 7
 double tare = 0;
 
+float e =  2.71828;
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(buttonPin,INPUT);
@@ -37,6 +40,8 @@ void setup() {
   display.drawPixel(10, 10, SSD1306_WHITE);
   display.display();
 
+  ads.setGain(GAIN_TWOTHIRDS);
+  
   if (!ads.begin()) {
     Serial.println("Failed to initialize ADS.");
     while (1);
@@ -62,16 +67,17 @@ void loop() {
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
   display.print("mv ");
-  display.println(ads.computeVolts(smoothRead));//display the reading from the adc without any changes
+  display.println(ads.computeVolts(smoothRead)*1000);//display the reading from the adc without any changes
   display.print("Gs ");
   display.print(convertNumber(smoothRead)-tare);//find the weight but subtract what has been zeroed out
   display.display();
 }
 
-//gonna add a legit funcion at some point
+//returns the grams using the line of best fit
 double convertNumber(int data){
   //amazing conversion being done
-  return data*2;
+  double addedVal = 3.9486;
+  return exp((data/525)+addedVal);
 }
 
 //turns on the led of a certain color and turns the rest off
