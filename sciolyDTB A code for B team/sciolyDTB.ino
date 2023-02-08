@@ -1,136 +1,185 @@
-// WJ SCIENCE OLYMPIAD TEAM A CODE
-// Zaine Rehman, Jacob Oshinsky
-
-//oled libs
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Math.h>
 
-// PINS
-#define sensorPin A5
+/***********************************************/
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+// measurement delay, in ms
+static constexpr uint16_t DB_MEASUREDELAY = 20;
+// debug mode
+static constexpr bool DB_DEBUG = true;
 
-#define OLED_RESET		 -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+// the bounds
+static constexpr uint16_t[4] DB_BOUNDS {0, 105, 445, 1000};
+
+// pins
+static constexpr uint8_t redPin 4;
+static constexpr uint8_t greenPin 3;
+static constexpr uint8_t bluePin 2;
+static constexpr uint8_t buttonPin 7;
+
+/***********************************************/
+
+// screen things
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
-// CALIBRATION
-// set up to work like this, where y = grams and x = sensor input
-// y = a(b(x+c))+d
-// y = a*log_b(x+c)+d	(forgot if this is how log parent function is)
-constexpr float	CAL_A		= 1.5 ;
-constexpr float	CAL_B		= 1.5 ;
-constexpr float	CAL_C		= 1.5 ;
-constexpr float	CAL_D		= -263;
-static		double CAL_ZERO = 0	 ;
+// ADC setup (jacob help)
+#include <Adafruit_ADS1X15.h>
+Adafruit_ADS1015 ads;
 
-// PINS
-// sensor pad in
-constexpr uint8_t PAD_PIN = A0;
-// adc pin
-constexpr uint8_t READY_PIN = 7;
-// zero button pin
-constexpr uint8_t ZERO_PIN = 6;
+// e (!!!)
+static constexpr float e = 2.71828;
 
-//led pins
-constexpr uint8_t greenPin = 4;
-constexpr uint8_t redPin = 3;
-constexpr uint8_t bluePin = 2;
+// input from the ADC
+static uint16_t ADC_in = 0;
+// stores the last 5 data points
+static uint16_t dataset[5] = {0,0,0,0,0};
 
-constexpr uint8_t ITERATIONS = 10;
-constexpr uint16_t R_0 = 10000; // known resistor value in [Ohms]
-constexpr float	 VCC = 5.0; // supply voltage
+// zero value
+// calibration!!!
+static float zeroVal = 50;
 
-// light up a specific LED and turn off the others
+// set the LEDs
 void setLed(const char& color) 
 {
-	if (color == 'r') {
-		digitalWrite(redPin, HIGH);
-		digitalWrite(greenPin, LOW);
-		digitalWrite(bluePin, LOW);
-		return;
+	if (color == 'R') {
+		digitalWrite(redPin  , HIGH);
+		digitalWrite(greenPin, LOW );
+		digitalWrite(bluePin , LOW );
 	}
-	if (color == 'g') {
-		digitalWrite(redPin	, LOW);
+	if (color == 'G') {
+		digitalWrite(redPin  , LOW );
 		digitalWrite(greenPin, HIGH);
-		digitalWrite(bluePin, LOW);
-		return;
+		digitalWrite(bluePin , LOW );
 	}
-	if (color == 'b') {
-		digitalWrite(redPin, LOW);
-		digitalWrite(greenPin,LOW);
-		digitalWrite(bluePin, HIGH);
-		return;
+	if (color == 'B') {
+		digitalWrite(redPin  , LOW );
+		digitalWrite(greenPin, LOW );
+		digitalWrite(bluePin , HIGH);
+	}
+	if (color == 'X') {
+		digitalWrite(redPin  , LOW);
+		digitalWrite(greenPin, LOW);
+		digitalWrite(bluePin , LOW);
+	}
+	if (color == '!') {
+		digitalWrite(redPin  , HIGH);
+		digitalWrite(greenPin, HIGH);
+		digitalWrite(bluePin , HIGH);
 	}
 }
 
-double grams(const double& mv){
-    return CAL_A * pow(CAL_B, (mv - CAL_C)) + CAL_D + CAL_ZERO;
-	//return CAL_A * ( CAL_B * ( mv - CAL_C ) ) + CAL_D + CAL_ZERO;
-	//return CAL_A * (log(mv) / log(CAL_B) - CAL_C) + CAL_D - CAL_ZERO;
-}
-
-double conversion(const double& red){
-	return ((-50000 / (red * 4.88)) - 27);
-	//return (((10000 * -5) / (red * 4.88)) - 27);
-}
-
-void setup () 
+// converts data to grams
+// jacob is a nerd
+double convertNumber(uint16_t data)
 {
-	pinMode(greenPin,OUTPUT);
-	pinMode(redPin,OUTPUT);
-	pinMode(bluePin,OUTPUT);
-	//pinMode(analogPin,INPUT);
+	float data2 = (float)data / 525;
+	double dataFinal = exp(data2 + 3.9486);
+	
+	if (DB_DEBUG) {
+		Serial.print("convertNumber data -> grams: [");
+		Serial.print(data);
+		Serial.print("] -> [");
+		Serial.print(dataFinal);
+		Serial.print("]\n");
+	}
+	
+	return dataFinal;
+}
 
- 
+// average the data set (last 5 data points)
+// "I love this int!" YOU ARE WASTING MEMORY SPACE JACOB
+// THE DATA COULD EASLIY BE STORED INSIDE UINT16_T
+// JESUS CHRIST STOP USING INT
+uint16_t smoothing(uint16_t rawData)
+{
+	uint16_t dataAmount = 5;
+	uint16_t sum = 0;
+	float avg = 0;
+
+	// push back all the data, and forget about the oldest one
+	for(uint16_t i = dataAmount-1; i > 0; --i) {
+		datasets[i] = datasets[i-1];
+	}
+	datasets[0] = rawData;
+
+	for(uint16_t i = 0; i < dataAmount; ++i) {
+		sum += datasets[i];
+	}
+	avg = sum/dataAmount;
+	return avg;
+}
+
+void setup() 
+{
+	// set the LED pins
+	pinMode(buttonPin,INPUT);
+	pinMode(redPin, OUTPUT);
+	pinMode(greenPin, OUTPUT);
+	pinMode(bluePin, OUTPUT);
+	
+	// consider changing the baud rate?
 	Serial.begin(9600);
-	//display setup
-    if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+
+	// oops! you suck and broke something
+	if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
 		Serial.println(F("SSD1306 allocation failed"));
-		while (1); // Don't proceed, loop forever
+		while (1);
 	}
-
-	// Show initial display buffer contents on the screen --
-	// the library initializes this with an Adafruit splash screen.
-	display.display();
-	delay(1000); // Pause for 2 seconds
-
-	// Clear the buffer
-	display.clearDisplay();
-	display.drawPixel(10, 10, SSD1306_WHITE);
-
-	// Show the display buffer on the screen. You MUST call display() after
-	// drawing commands to make them visible on screen!
-	display.display();
-	delay(1000);
-
-}
-
-void loop () 
-{
-	double sum_val = 0.0;
-	double R_FSR;
-	for(uint16_t i = 0; i < ITERATIONS; i++){
-		sum_val += (analogRead(sensorPin) / 1023) * 5;
-		delay(10);
-	}
-	sum_val /= ITERATIONS;
-
-	R_FSR = (R_0 / 1000) * ((VCC / sum_val) - 1);
 
 	
+	display.display(); // NO WAY DISPLAY DISPLAY
+	// wait! decrease this if you want
+	delay(500);
 	display.clearDisplay();
-	display.setTextSize(1);						 // Normal 1:1 pixel scale
-	display.setTextColor(SSD1306_WHITE);				// Draw white text
-	display.setCursor(0,0);						 // Start at top-left corner
-
-	display.println("mv: ");
-	display.println(mathsfun(R_FSR));
-	Serial.println(R_FSR);
-	display.println("grams: ");
-	display.println(conversion(R_FSR));
+	// testing thing? can i just remove this
+	display.drawPixel(10, 10, SSD1306_WHITE);
 	display.display();
+
+	ads.setGain(GAIN_TWOTHIRDS);
+
+	// oops! you suck and broke something [part 2]
+	if (!ads.begin()) {
+		Serial.println("Failed to initialize ADS.");
+		while (1);
+	}
+}
+
+void loop() 
+{
+	// read ADC
+	ADC_in = smoothing(ads.readADC_SingleEnded(0));
+	// measurement delay
+	delay(DB_MEASUREDELAY);
+	
+	// reset display
+	display.clearDisplay();
+	display.setTextSize(2);
+	display.setTextColor(SSD1306_WHITE);
+	display.setCursor(0,0);
+
+	// print the millivolts
+	display.print("mv ");
+	display.println(ads.computeVolts(ADC_in)*1000);
+	// print the weight
+	display.print("gs ");
+	display.print(convertNumber(ADC_in)-zeroVal);
+	display.display();
+	
+	// change LED colors based on the set bounds
+	double weight = convertNumber(ADC_in)-zeroVal;
+	if      ((DB_BOUNDS[0] < weight) && (weight < DB_BOUNDS[1]))
+		setLed('G');
+	else if ((DB_BOUNDS[1] < weight) && (weight < DB_BOUNDS[2]))
+		setLed('B');
+	else if ((DB_BOUNDS[2] < weight) && (weight < DB_BOUNDS[3]))
+		setLed('R');
+	else ledOff();
+
+	// zero button
+	if(digitalRead(buttonPin) == HIGH)  
+		zeroVal = convertNumber(ADC_in);
 }
