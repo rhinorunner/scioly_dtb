@@ -12,7 +12,8 @@ static constexpr uint16_t DB_MEASUREDELAY = 20;
 static constexpr bool DB_DEBUG = true;
 
 // the bounds
-static constexpr uint16_t DB_BOUNDS[4] {0, 105, 445, 1000};
+static constexpr uint16_t DB_BOUNDS[4] {0, 105, 200, 1000};
+static constexpr char DB_BOUNDORDER[3] = {'G','B','R'};
 
 // pins
 static constexpr uint8_t redPin    = 5;
@@ -33,11 +34,11 @@ static constexpr float e = 2.71828;
 // input from the ADC
 static uint16_t ADC_in = 0;
 // stores the last 5 data points
-static uint16_t dataset[5] = {0,0,0,0,0};
+static uint16_t dataset[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 // zero value
 // calibration!!!
-static float zeroVal = 54;
+static float zeroVal = 70;
 
 // set the LEDs
 void setLed(const char& color) 
@@ -73,8 +74,7 @@ void setLed(const char& color)
 // jacob is a nerd
 double convertNumber(uint16_t data)
 {
-  float data2 = (float)data / 525;
-  double dataFinal = exp(data2 + 3.9486);
+  double dataFinal = data;
   
   if (DB_DEBUG) {
     Serial.print("convertNumber data -> grams: [");
@@ -93,7 +93,7 @@ double convertNumber(uint16_t data)
 // JESUS CHRIST STOP USING INT
 uint16_t smoothing(uint16_t rawData)
 {
-  uint16_t dataAmount = 5;
+  uint16_t dataAmount = 20;
   uint16_t sum = 0;
   float avg = 0;
 
@@ -150,22 +150,25 @@ void loop()
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
 
+  // woohoo! actual thing
+  double weight = convertNumber(ADC_in)-zeroVal;
+  if (weight < 0) weight = 0;
+
   // print the millivolts
   display.print("mv ");
-  display.println(ADC_in*4.8);
+  display.println(ADC_in);
   // print the weight
   display.print("gs ");
-  display.print(convertNumber(ADC_in)-zeroVal);
+  display.print(weight);
   display.display();
   
   // change LED colors based on the set bounds
-  double weight = convertNumber(ADC_in)-zeroVal;
   if      ((DB_BOUNDS[0] < weight) && (weight < DB_BOUNDS[1]))
-    setLed('G');
+    setLed(DB_BOUNDORDER[0]);
   else if ((DB_BOUNDS[1] < weight) && (weight < DB_BOUNDS[2]))
-    setLed('B');
+    setLed(DB_BOUNDORDER[1]);
   else if ((DB_BOUNDS[2] < weight) && (weight < DB_BOUNDS[3]))
-    setLed('R');
+    setLed(DB_BOUNDORDER[2]);
   else setLed('X');
 
   // zero button
